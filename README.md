@@ -46,7 +46,10 @@ and can be examined using the gnuplot scripts provided, e.g.:
 gnuplot
 load "plasmaYZ_traj.plt"
 ```
-![Example output](./gnuplot/bottle_5000.png "Example of 5000 particles trajectories in magnetic bottle configuration")
+
+Example of 5000 particles trajectories in magnetic bottle configuration:
+
+<img src="./gnuplot/bottle_5000.png" alt="Example output" width="300" height="300">
 
 ## TODO (PIC)
 
