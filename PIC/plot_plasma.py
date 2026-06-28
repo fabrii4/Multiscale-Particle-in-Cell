@@ -3,10 +3,25 @@ import numpy as np
 import trimesh
 from trimesh import viewer
 
-N_particles=200000
+N_particles=100000
 N_steps=20000
 n_skip=2
 
+#read parameters from file
+with open("param.txt", "r") as file:
+    for line in file:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("Np"):
+            elements = line.split()
+            N_particles=int(elements[1])
+        if line.startswith("Nsave"):
+            elements = line.split()
+            N_steps=int(elements[1])
+            break
+
+#current loop rings dimensions (as defined in Poisson.cu, should be moved to param.txt)
 EXT_AR=0.01
 EXT_DR=0.01
 
