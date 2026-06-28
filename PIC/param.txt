@@ -1,0 +1,44 @@
+# PIC simulation configuration (read by ./plasma at start-up).
+# Format: "key value", one per line. '#' starts a comment. Unknown keys are
+# ignored. If this file is absent the built-in defaults are used instead.
+# Command-line arguments, if given, override the field/algorithm keys below.
+#
+# The trajectory is streamed to results.bin frame by frame, so host RAM stays
+# bounded (~hundreds of MB) even for millions of particles. The cost is now disk:
+# results.bin is Nsave*Np*3*4 bytes (e.g. 7.2 GB at Np=300000, Nsave=2000) - lower
+# Nsave to shrink it.
+
+Np        100000    # number of particles
+Nneg      50000    # number of negative particles (index < Nneg); the rest are positive
+Nstep     20000      # number of time steps
+Nsave     10000      # number of trajectory frames saved (controls results.bin size)
+dt        10e-10     # time step (s)
+seed      5         # random-number seed
+
+# Two particle species. The charge is an integer multiple of the elementary
+# charge |e| (positive species qpos>0, negative species qneg<0). The mass is
+# "value" x base, where the unit selects the base: e=electron mass, p=proton
+# mass, kg=absolute value in kg. The defaults below are an electron / deuteron
+# plasma (negative = 1 electron mass, -1 e; positive = 2 proton masses, +1 e).
+qpos      1         # charge of positive particles (units of |e|)
+mpos      2         # mass value of positive particles
+mpos_unit p         # mass unit for positive particles: e | p | kg
+qneg      -1        # charge of negative particles (units of |e|)
+mneg      1         # mass value of negative particles
+mneg_unit e         # mass unit for negative particles: e | p | kg
+
+bext      2         # external magnetic field: 0 none, 1 uniform Bz, 2 current loops
+eext      1         # external electric field: 0 none, 1 charged rings
+depth     5         # multiscale recursion depth (1 = mesh only, >1 refines dense regions)
+pp_lc     -1        # direct particle-particle short-range correction range in cells (-1 = off)
+mp_lc     1        # GPU cell-multipole short-range correction range in cells (-1 = off)
+bint      1         # internal magnetic field F3 from moving charges (0/1)
+eind      1         # retarded internal electric field F2 (0/1)
+rp_lc     1        # cell-multipole range for the F2/F3 terms (-1 = direct O(N^2), >=0 = O(N))
+rad_corr  1        # approximate radiative (Larmor) losses (0/1)
+
+nsub      3        # temporal sub-cycling factor in dense cells (1 = off; dense cells take dt/nsub)
+subthresh 100       # cell particle count above which to sub-cycle
+
+dens_bins 80        # number of radial bins for the density output (density.txt)
+dens_rmax 0.06      # maximum radius of the density profile (m)

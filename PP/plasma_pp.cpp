@@ -28,8 +28,8 @@ using namespace std;
 
 
 //Main parameters
-#define Ne 1800 //number of particles
-#define Nel 1000 //number of electrons
+#define Ne 1000 //number of particles
+#define Nel 500 //number of electrons
 #define Nstep 2000 //number of steps
 #define Nsave 2000 //number of trajectory points saved
 #define dt (5*pow(10,-10)) //time step s
@@ -39,9 +39,9 @@ using namespace std;
 #define MPI 3.1415926535897932385 //greek pi
 #define e0 (8.854187817*pow(10,-12))  //electric suscettivity C^2/(N*m^2)
 #define m0 (4*MPI*pow(10,-7)) //magnetic permeability N/A^2
-#define qe (-1.60217733*pow(10,-19)*10000) //electron charge C
-#define me (9.1093897*pow(10,-31)*10000)   //electrom mass Kg
-#define mp (2*1.67265*pow(10,-27)*10000)   //deuteron mass Kg
+#define qe (-1.60217733*pow(10,-19)) //electron charge C
+#define me (9.1093897*pow(10,-31))   //electrom mass Kg
+#define mp (2*1.67265*pow(10,-27))   //deuteron mass Kg
 
 //System parameters
 #define ar 0.01 //m charged-magnetic ring radius
@@ -362,7 +362,7 @@ int main()
      float vep[Ne][3];
      //#pragma acc kernels loop independent copyin(xe,ve,ae) copyout(vep) gang(32) vector(32)
      #pragma acc kernels copyin(xe,ve,ae) copyout(vep)
-     #pragma acc loop independent device_type(NVIDIA) gang worker vector
+     #pragma acc loop independent device_type(nvidia) gang worker vector
      for(int i=0;i<Ne;i++)
      {
         //calculate electric and magnetic field
