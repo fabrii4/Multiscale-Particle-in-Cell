@@ -1,15 +1,14 @@
 # Multiscale Particle-in-Cell algorithm
 
 
-## Work in progress!
-
 Development of a multiscale [particle in cell](https://en.wikipedia.org/wiki/Particle-in-cell) (PIC) algorithm in cuda for plasma simulations.
 
-The scope is to build a P^3M algorithm where meshes of different sizes are constructed recursively depending on the density of the particles distribution 
-so that denser regions are subdivided in smaller cells while in less dense regions only the coarser subdivisions are used.
+The simulation uses a P^3M algorithm where meshes of different sizes are constructed recursively depending on the density of the particles distribution so that denser regions are subdivided in smaller cells while in less dense regions only the coarser subdivisions are used.
 In this way it is possible to obtain more accurate results without affecting the execution time too much.
+The simulation includes various optional features: short range interactions (both through direct particle-particle calculation or multipole approximation), radiative losses, temporal multiscale evolution, internal magnetic field contributions (see `param.txt`).
 
-A fully working particle-particle (PP) algorithm with openACC accellaration is also provided. 
+
+A particle-particle (PP) algorithm with openACC accellaration is also provided. 
 
 For more details on the plasma equations on which the algorithm is build, see the notes [plasma_equations.pdf](./plasma_equations.pdf)
 
@@ -21,7 +20,11 @@ Cuda toolkit is required.
 
 To build the project run `make` from the PIC folder.
 
+Set the parameter configuration in `param.txt`
+
 Use `./plasma` to launch the application.
+
+Use `plot_plasma.py` to render the simulation.
 
 ### PP algorithm:
 
@@ -51,9 +54,11 @@ Example of 5000 particles trajectories in magnetic bottle configuration:
 
 <img src="./gnuplot/bottle_5000.png" alt="Example output" width="300" height="300">
 
+Example of 50'0000 negative charges (red) and 50'000 positive ones (green) in a negatively charged magnetic bottle
+<img src="./gnuplot/plasma.gif" width="400" alt="App Demo">
+
 ## TODO (PIC)
 
-- Fix the bug when higher orders of subdivisions are introduced
-- Add update of particles velocities and temporal evolution of the system
-- Import implementation of external fields from PP algorithm
+- Extend grid calculation to magnetic fields
+- Limit grid size/depth to GPU memory to avoid running out of memory
 
