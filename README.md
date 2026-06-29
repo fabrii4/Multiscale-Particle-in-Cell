@@ -54,7 +54,8 @@ Example of 5000 particles trajectories in magnetic bottle configuration:
 
 <img src="./gnuplot/bottle_5000.png" alt="Example output" width="300" height="300">
 
-Example of 50'0000 negative charges (red) and 50'000 positive ones (green) in a negatively charged magnetic bottle
+Example of 50'0000 negative charges (red) and 50'000 positive ones (green) in a negatively charged magnetic bottle:
+
 <img src="./gnuplot/plasma.gif" width="400" alt="App Demo">
 
 ## TODO (PIC)
