@@ -7,8 +7,8 @@ src = ./plasma.cu ./Poisson.cu
 obj := $(patsubst $(src_dir)/%.cu,$(obj_dir)/%.o,$(src))
 #obj = $(src:.c=.o)
 #FLAGS
-cpp := -std=c++11 -O3
-cuda := -arch=sm_50 --use_fast_math -lcufft --default-stream per-thread -lcudadevrt -lcudart -w -lineinfo -DTHRUST_DEBUG #-G -g # -rdc=true 
+cpp := -std=c++17 -O3
+cuda := -arch=sm_89 --use_fast_math -lcufft --default-stream per-thread -lcudadevrt -lcudart -w -lineinfo -DTHRUST_DEBUG #-G -g # -rdc=true 
 #cppcuda = -arch=sm_50 --use_fast_math -lcufft -lineinfo --default-stream per-thread -lcudadevrt -rdc=true 
 flags := $(cuda) $(cpp)
 

@@ -8,8 +8,8 @@
 # results.bin is Nsave*Np*3*4 bytes (e.g. 7.2 GB at Np=300000, Nsave=2000) - lower
 # Nsave to shrink it.
 
-Np        100000    # number of particles
-Nneg      50000    # number of negative particles (index < Nneg); the rest are positive
+Np        200000    # number of particles
+Nneg      100000    # number of negative particles (index < Nneg); the rest are positive
 Nstep     20000      # number of time steps
 Nsave     10000      # number of trajectory frames saved (controls results.bin size)
 dt        10e-10     # time step (s)
@@ -29,15 +29,15 @@ mneg_unit e         # mass unit for negative particles: e | p | kg
 
 bext      2         # external magnetic field: 0 none, 1 uniform Bz, 2 current loops
 eext      1         # external electric field: 0 none, 1 charged rings
-depth     5         # multiscale recursion depth (1 = mesh only, >1 refines dense regions)
+depth     10         # multiscale recursion depth (1 = mesh only, >1 refines dense regions)
 pp_lc     -1        # direct particle-particle short-range correction range in cells (-1 = off)
-mp_lc     1        # GPU cell-multipole short-range correction range in cells (-1 = off)
-bint      1         # internal magnetic field F3 from moving charges (0/1)
-eind      1         # retarded internal electric field F2 (0/1)
-rp_lc     1        # cell-multipole range for the F2/F3 terms (-1 = direct O(N^2), >=0 = O(N))
+mp_lc     -1        # GPU cell-multipole short-range correction range in cells (-1 = off)
+bint      0         # internal magnetic field F3 from moving charges (0/1)
+eind      0         # retarded internal electric field F2 (0/1)
+rp_lc     0        # cell-multipole range for the F2/F3 terms (-1 = direct O(N^2), >=0 = O(N))
 rad_corr  1        # approximate radiative (Larmor) losses (0/1)
 
-nsub      3        # temporal sub-cycling factor in dense cells (1 = off; dense cells take dt/nsub)
+nsub      1        # temporal sub-cycling factor in dense cells (1 = off; dense cells take dt/nsub)
 subthresh 100       # cell particle count above which to sub-cycle
 
 dens_bins 80        # number of radial bins for the density output (density.txt)

@@ -43,6 +43,8 @@ using namespace std;
 //using namespace thrust;
 namespace cg = cooperative_groups;
 
+#define N_THREADS 512 //number of threads used by CUDA kernels
+
 #define MPI 3.1415926535897932385 //greek pi
 
 //Physical constants (must match the values used in plasma.cu / plasma_pp.cpp)
@@ -308,7 +310,7 @@ __global__ void GridField_ker(const float* __restrict__ fg, float3* __restrict__
 
 void GridField(float* fg_D, float3* eg_D, int3 N, float3 A)
 {
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=(N.x*N.y*N.z)/threads+1;
    GridField_ker<<<blocks,threads>>>(fg_D, eg_D, N, A);
 }
@@ -373,7 +375,7 @@ __global__ void MeshToParticle3_ker(const float4* __restrict__ xp, float3* __res
 
 void MeshToParticle3(float4* xp, float3* Ep, float3* eg, int Np, int3 N, float3 A, float3 B, int sgn)
 {
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Np/threads+1;
    MeshToParticle3_ker<<<blocks,threads>>>(xp, Ep, eg, Np, N, A, B, sgn);
 }
@@ -463,7 +465,7 @@ __global__ void Boris_ker(float4* __restrict__ xp, float3* __restrict__ vp, floa
 //mneg are the masses (kg) of the positive- and negative-charge species.
 void BorisPush(float4* xp_D, float3* vp_D, float3* ap_D, float3* Eg_D, float3* Bint_D, float3* Eind_D, int Np, float dt, int bext_mode, int eext_mode, float mpos, float mneg, int radiative_corr)
 {
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Np/threads+1;
    float kEint=(float)(ECHG/E0);  //grid-units internal field -> physical field
    Boris_ker<<<blocks,threads>>>(xp_D, vp_D, ap_D, Eg_D, Bint_D, Eind_D, Np, dt, bext_mode, eext_mode, kEint, mpos, mneg, LH1_dptr, LH2_dptr, radiative_corr);
@@ -540,7 +542,7 @@ __global__ void BorisSub_ker(float4* __restrict__ xp, float3* __restrict__ vp, f
 
 void BorisSubPush(float4* xp_D, float3* vp_D, float3* ap_D, float3* Eg_D, float3* Bint_D, float3* Eind_D, int* Nc_D, int Np, int3 N, float3 A, float3 B, float dt, int nsub, int thresh, int bext_mode, int eext_mode, float mpos, float mneg, int radiative_corr)
 {
-   int threads=256, blocks=Np/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1;
    float kEint=(float)(ECHG/E0);
    BorisSub_ker<<<blocks,threads>>>(xp_D, vp_D, ap_D, Eg_D, Bint_D, Eind_D, Nc_D, Np, N, A, B, dt, nsub, thresh, bext_mode, eext_mode, kEint, mpos, mneg, LH1_dptr, LH2_dptr, radiative_corr);
 }
@@ -601,7 +603,7 @@ __global__ void Loss_ker(float4* __restrict__ xp, float3* __restrict__ vp, float
 
 void HandleLoss(float4* xp_D, float3* vp_D, float3* ap_D, int Np, int* nlost_D, float Rmax, float drb, float drt, float ar2b, float ar2t)
 {
-   int threads=256, blocks=Np/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1;
    Loss_ker<<<blocks,threads>>>(xp_D, vp_D, ap_D, Np, nlost_D, Rmax*Rmax, drb, drt, ar2b, ar2t);
 }
 
@@ -694,7 +696,7 @@ __global__ void ParticleToMesh_ker(float4 *xp, float *rho, int *cell, int Np, in
 
 void ParticleToMesh(float4 *xp, float *rho, int *cell, int Np, int3 N, float3 A, float3 B)
 {
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Np/threads+1;
    ParticleToMesh_ker<<<blocks,threads>>>(xp, rho, cell, Np, N, A, B);
 }
@@ -762,7 +764,7 @@ __global__ void MeshToParticle_ker(float4 *xp, float *fp, float *fg, int Np, int
 
 void MeshToParticle(float4 *xp, float *fp, float *fg, int Np, int3 N, float3 A, float3 B, int sgn)
 {
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Np/threads+1;
    MeshToParticle_ker<<<blocks,threads>>>(xp, fp, fg, Np, N, A, B, sgn);
 }
@@ -1105,7 +1107,7 @@ void fft(float *rho_D, cufftComplex *frho_D, cufftComplex *fker_D, float3 A, flo
    cufftHandle f1_plan = f_plan;
 
    //input vectors
-   int threads=64;
+   int threads=N_THREADS;
    int blocks=(N.x*N.y*N.z)/threads+1;
    int blocksL=Ntot/threads+1;
    //thrust::device_vector<cufftReal> in_d(Ntot,0);
@@ -1168,7 +1170,7 @@ void fft(float *rho_D, cufftComplex *frho_D, cufftComplex *fker_D, float3 A, flo
 //   //input vectors
 //   cufftReal *ker_D;
 //   cudaMalloc(&ker_D, Ntot*sizeof(cufftReal));
-//   int threads=256;
+//   int threads=N_THREADS;
 //   int blocks=Ntot/threads+1;
 //   ker<<<blocks,threads>>>(ker_D, A, B, N);
 //   //cudaMemcpy(in_D, rho_D, Ntot*sizeof(cufftReal), cudaMemcpyDeviceToDevice);
@@ -1208,14 +1210,14 @@ __global__ void solver(cufftComplex *frho_D, cufftComplex *fker_D, int Ntot)
 void Poisson_Solver(cufftComplex *frho_D, cufftComplex *fker_D, int3 N)
 {
    int Ntot=2*N.x*2*N.y*(2*N.z/2+1);
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Ntot/threads+1;
    solver<<<blocks,threads>>>(frho_D, fker_D, Ntot);
 }
 
 void Poisson_Solver_thrust(thrust::device_vector<thrust::complex<float> >& frho_d, thrust::device_vector<thrust::complex<float> >& fker_d)
 {
-   transform(frho_d.begin(), frho_d.end(), fker_d.begin(), frho_d.begin(), 
+   thrust::transform(frho_d.begin(), frho_d.end(), fker_d.begin(), frho_d.begin(), 
                          thrust::multiplies<thrust::complex<float> >());
 }
 
@@ -1248,7 +1250,7 @@ void fft_inv(cufftComplex *frho_D, float *rho_D, int3 N)
 
    //Compute inverse FFT
    cufftExecC2R(i_plan, frho_D, in_D);
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=(N.x*N.y*N.z)/threads+1;
    copy_out<<<blocks,threads>>>(rho_D, in_D, N);
 
@@ -1884,7 +1886,7 @@ void OrderCellToFp(thrust::device_vector<float>& fp_d, thrust::device_vector<flo
    int Np=fp_d.size();
    thrust::device_vector<float>fpp_d(Np);
    thrust::gather(XC_d.begin(), XC_d.end(), fpc_d.begin(), fpp_d.begin());
-   transform(fp_d.begin(), fp_d.end(), fpp_d.begin(), fp_d.begin(), thrust::plus<float>());
+   thrust::transform(fp_d.begin(), fp_d.end(), fpp_d.begin(), fp_d.begin(), thrust::plus<float>());
 }
 
 __global__ void SumF(float *fp_D, const float* __restrict__ fpG_D, int Np)
@@ -1902,7 +1904,7 @@ void PPField(float4 *xp_D, float *fp_D, int *Nc_D, int Np, int3 N, float3 A, flo
 {
    //int lc=1; //number of cell to consider for PP interaction (0->1, 1->27)
    int Nc=(N.x-1)*(N.y-1)*(N.z-1);
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Np/threads+1;
    int smem=0;//4*threads*sizeof(float4);
    cudaStream_t s1, s2;
@@ -2084,7 +2086,7 @@ __global__ void CellFieldToParticleF_ker(const float4* __restrict__ xp_D, float3
 void MPFieldF(float4 *xp_D, float3 *Ep_D, int *Nc_D, int Np, int3 N, float3 A, float3 B, int lc)
 {
    int Nc=(N.x-1)*(N.y-1)*(N.z-1);
-   int threads=256, blocks=Np/threads+1, blocksC=Nc/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1, blocksC=Nc/threads+1;
    int *offset_h, *cellind_h, *Nc_h, *offset_d, *cellind_d;
    cudaMallocHost(&offset_h, Nc*sizeof(int));
    cudaMallocHost(&cellind_h, Np*sizeof(int));
@@ -2265,7 +2267,7 @@ __global__ void CellRetToParticle_ker(const float4* __restrict__ xp, float3* __r
 void RetardedMultipole(float4 *xp_D, float3 *vp_D, float3 *ap_D, float3 *Eind_D, float3 *Bp_D, int *Nc_D, int Np, int3 N, float3 A, float3 B, int lc)
 {
    int Nc=(N.x-1)*(N.y-1)*(N.z-1);
-   int threads=256, blocks=Np/threads+1, blocksC=Nc/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1, blocksC=Nc/threads+1;
    int *offset_h, *cellind_h, *Nc_h, *offset_d, *cellind_d;
    cudaMallocHost(&offset_h, Nc*sizeof(int));
    cudaMallocHost(&cellind_h, Np*sizeof(int));
@@ -2338,7 +2340,7 @@ PPField_Tot_ker(const float4* __restrict__ xp_D, float* __restrict__ fp_D, int N
 
 void PPField_Tot(float4 *xp_D, float *fp_D, int Np)
 {
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=(Np+threads-1)/threads;
 
    int Ntile=blocks;
@@ -2470,7 +2472,7 @@ void ParticleCluster(thrust::device_vector<int>& cellind_d, thrust::device_vecto
    int Nc=(N.x-1)*(N.y-1)*(N.z-1);
    int* cellind_D = raw_pointer_cast(&cellind_d[0]);
 
-   int threads=256;
+   int threads=N_THREADS;
    int blocks=Nc/threads+1;
    int* Nc_D = raw_pointer_cast(&Nc_d[0]);
    threshold<<<blocks,threads>>>(Nc_D, cellind_D, Nc, thresh);
@@ -2718,7 +2720,7 @@ __global__ void PPFieldF_ker(const float4* __restrict__ xp_D, float3* __restrict
 void PPFieldF(float4 *xp_D, float3 *Ep_D, int *Nc_D, int Np, int3 N, float3 A, float3 B, int lc)
 {
    int Nc=(N.x-1)*(N.y-1)*(N.z-1);
-   int threads=256, blocks=Np/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1;
    int *offset_h, *cellind_h, *Nc_h, *offset_d, *cellind_d;
    cudaMallocHost(&offset_h, Nc*sizeof(int));
    cudaMallocHost(&cellind_h, Np*sizeof(int));
@@ -2768,7 +2770,7 @@ __global__ void BInt_ker(const float4* __restrict__ xp, const float3* __restrict
 
 void BIntField(float4 *xp_D, float3 *vp_D, float3 *Bp_D, int Np)
 {
-   int threads=256, blocks=Np/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1;
    //q_j = w_j*|e|, so the coefficient carries |e| (=ECHG); w_j is read from xp.w
    float q=-(float)(M0*ECHG/(4*MPI));
    BInt_ker<<<blocks,threads>>>(xp_D, vp_D, Bp_D, Np, q);
@@ -2810,7 +2812,7 @@ __global__ void EInd_ker(const float4* __restrict__ xp, const float3* __restrict
 
 void EIndField(float4 *xp_D, float3 *vp_D, float3 *ap_D, float3 *Eind_D, int Np)
 {
-   int threads=256, blocks=Np/threads+1;
+   int threads=N_THREADS, blocks=Np/threads+1;
    //q_j = w_j*|e|, so the coefficient carries |e| (=ECHG); w_j is read from xp.w
    float q1=-(float)(M0*ECHG/(4*MPI));
    EInd_ker<<<blocks,threads>>>(xp_D, vp_D, ap_D, Eind_D, Np, q1);
